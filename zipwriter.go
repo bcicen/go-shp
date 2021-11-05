@@ -20,7 +20,7 @@ func (b *byteBuf) Len() int { return len(b.buf) }
 
 // GetReader returns an io.Reader for byteBuf contents
 func (b *byteBuf) GetReader() io.Reader {
-	return bytes.NewBuffer(b.buf)
+	return bytes.NewReader(b.buf)
 }
 
 // byteBuf implements io.Writer
@@ -30,6 +30,7 @@ func (b *byteBuf) Write(p []byte) (int, error) {
 		b.buf = append(b.buf, make([]byte, extra)...)
 	}
 	n := copy(b.buf[b.pos:], p)
+	b.pos += n
 	return n, nil
 }
 
@@ -148,7 +149,7 @@ func (w *ZipWriter) Bytes() ([]byte, error) {
 		if err != nil {
 			return err
 		}
-		_, err = io.Copy(zf, w.shp.(*byteBuf).GetReader())
+		_, err = io.Copy(zf, bb)
 		return err
 	}
 
@@ -166,6 +167,10 @@ func (w *ZipWriter) Bytes() ([]byte, error) {
 		if err := writeFile(w.filename+".dbf", w.dbf.(*byteBuf).GetReader()); err != nil {
 			return nil, err
 		}
+	}
+
+	if err := zipw.Close(); err != nil {
+		return nil, err
 	}
 
 	return buf.Bytes(), nil

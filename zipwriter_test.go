@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const filenamePrefixZip = "test_files/writezip_"
+
 func TestByteBuf(t *testing.T) {
 	b := &byteBuf{}
 
@@ -61,7 +63,7 @@ func TestByteBuf(t *testing.T) {
 
 func zipUnzip(w *ZipWriter) error {
 	path := fmt.Sprintf("%d.zip", time.Now().Nanosecond())
-	//defer os.Remove(path)
+	defer os.Remove(path)
 	b, err := w.Bytes()
 	if err != nil {
 		return nil
@@ -75,7 +77,7 @@ func zipUnzip(w *ZipWriter) error {
 }
 
 func TestZipWritePoint(t *testing.T) {
-	filename := filenamePrefix + "point"
+	filename := filenamePrefixZip + "point"
 	defer removeShapefile(filename)
 
 	points := [][]float64{
@@ -85,11 +87,9 @@ func TestZipWritePoint(t *testing.T) {
 	}
 
 	shape, err := NewZipWriter(filename+".shp", POINT)
-	t.Logf("%T %T %T", shape.shp, shape.shx, shape.dbf)
 	require.NoError(t, err)
 	for _, p := range points {
 		shape.Write(&Point{p[0], p[1]})
-		t.Logf("%T %T %T", shape.shp, shape.shx, shape.dbf)
 	}
 	require.NoError(t, zipUnzip(shape))
 
@@ -101,7 +101,7 @@ func TestZipWritePoint(t *testing.T) {
 }
 
 func TestZipWritePolyLine(t *testing.T) {
-	filename := filenamePrefix + "polyline"
+	filename := filenamePrefixZip + "polyline"
 	defer removeShapefile(filename)
 
 	points := [][]Point{
