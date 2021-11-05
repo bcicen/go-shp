@@ -1,5 +1,5 @@
-module github.com/landru29/go-shp
+module github.com/bcicen/go-shp
 
-go 1.14
+go 1.16
 
 require github.com/stretchr/testify v1.7.0 // indirect
