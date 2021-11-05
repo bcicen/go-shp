@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 )
 
 // byteBuf provides a writeable + seekable byte buffer
@@ -142,10 +143,20 @@ func (w *ZipWriter) Bytes() ([]byte, error) {
 	var (
 		buf  = new(bytes.Buffer)
 		zipw = zip.NewWriter(buf)
+		now  = time.Now().UTC()
 	)
 
+	addFile := func(path string) (io.Writer, error) {
+		h := &zip.FileHeader{
+			Name:   path,
+			Method: zip.Deflate,
+		}
+		h.SetModTime(now)
+		return zipw.CreateHeader(h)
+	}
+
 	writeFile := func(path string, bb io.Reader) error {
-		zf, err := zipw.Create(path)
+		zf, err := addFile(path)
 		if err != nil {
 			return err
 		}
