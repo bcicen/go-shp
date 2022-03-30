@@ -66,6 +66,7 @@ func (b *byteBuf) Close() error {
 // ZipWriter provides an interface for writing shp and dbf files to a compressed ZIP archive.
 type ZipWriter struct {
 	*Writer
+	prj    writeSeekCloser
 	closed bool
 }
 
@@ -87,7 +88,14 @@ func NewZipWriter(filename string, t ShapeType) (*ZipWriter, error) {
 		shx:          shx,
 		GeometryType: t,
 	}
-	return &ZipWriter{w, false}, nil
+	return &ZipWriter{w, nil, false}, nil
+}
+
+// SetProjection sets the PRJ file contents from a given string
+func (w *ZipWriter) SetProjection(s string) error {
+	w.prj = &byteBuf{}
+	_, err := w.prj.Write([]byte(s))
+	return err
 }
 
 // SetFields sets field values in the DBF. This initializes the DBF buffer and
@@ -176,6 +184,12 @@ func (w *ZipWriter) Bytes() ([]byte, error) {
 
 	if w.dbf != nil {
 		if err := writeFile(w.filename+".dbf", w.dbf.(*byteBuf).GetReader()); err != nil {
+			return nil, err
+		}
+	}
+
+	if w.prj != nil {
+		if err := writeFile(w.filename+".prj", w.prj.(*byteBuf).GetReader()); err != nil {
 			return nil, err
 		}
 	}
